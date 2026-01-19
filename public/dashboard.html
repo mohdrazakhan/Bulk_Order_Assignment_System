@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Order Assignment Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #22c55e;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { margin: 0; font-size: 1.5rem; }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        select, button {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #1d4ed8; }
+        button.secondary { background-color: var(--secondary-color); }
+        button.success { background-color: var(--success-color); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .list-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th { background-color: #f8fafc; font-weight: 600; }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-badge.new { background-color: #dbeafe; color: #1e40af; }
+        .status-badge.unassigned { background-color: #fee2e2; color: #991b1b; }
+
+        #log-area {
+            background: #1e293b;
+            color: #e2e8f0;
+            font-family: monospace;
+            padding: 1rem;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Order Assignment System</h1>
+            <div id="status">System Ready</div>
+        </header>
+
+        <div class="card">
+            <div class="controls">
+                <label for="location">Location:</label>
+                <select id="location">
+                    <option value="Zone A">Zone A</option>
+                    <option value="Zone B">Zone B</option>
+                    <option value="Zone C">Zone C</option>
+                </select>
+                <button onclick="fetchData()">🔄 Fetch Data</button>
+                <button class="success" onclick="runAssignment()">🚀 Run Bulk Assignment</button>
+            </div>
+        </div>
+
+        <div class="card" id="log-container" style="display:none;">
+            <h3>Activity Log</h3>
+            <div id="log-area"></div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Unassigned Orders <span id="order-count">(0)</span></h3>
+                <div class="list-container">
+                    <table id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Value</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Available Couriers <span id="courier-count">(0)</span></h3>
+                <div class="list-container">
+                    <table id="couriers-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Capacity</th>
+                                <th>Assigned</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const log = (msg) => {
+            const area = document.getElementById('log-area');
+            document.getElementById('log-container').style.display = 'block';
+            area.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            area.scrollTop = area.scrollHeight;
+        };
+
+        async function fetchData() {
+            const loc = document.getElementById('location').value;
+            log(`Fetching data for ${loc}...`);
+            
+            try {
+                // Fetch Orders
+                const ordersRes = await fetch(`/orders/unassigned?location=${encodeURIComponent(loc)}`);
+                const orders = await ordersRes.json();
+                renderOrders(orders);
+
+                // Fetch Couriers
+                const couriersRes = await fetch(`/couriers/available?location=${encodeURIComponent(loc)}`);
+                const couriers = await couriersRes.json();
+                renderCouriers(couriers);
+
+                log('Data updated.');
+            } catch (e) {
+                log(`Error: ${e.message}`);
+            }
+        }
+
+        async function runAssignment() {
+            log('Starting bulk assignment...');
+            try {
+                const res = await fetch('/assignments/bulk', { method: 'POST' });
+                const data = await res.json();
+                log(`Result: ${data.message}`);
+                if(data.details) {
+                    log(`assigned: ${data.details.total_assigned}`);
+                    data.details.errors.forEach(err => log(`ERR: ${err}`));
+                }
+                // Refresh data
+                setTimeout(fetchData, 1000);
+            } catch (e) {
+                log(`Assignment Failed: ${e.message}`);
+            }
+        }
+
+        function renderOrders(orders) {
+            document.getElementById('order-count').innerText = `(${orders.length})`;
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = orders.map(o => `
+                <tr>
+                    <td>#${o.order_id}</td>
+                    <td>$${o.order_value}</td>
+                    <td>${o.order_date.split(' ')[1]}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="3">No unassigned orders</td></tr>';
+        }
+
+        function renderCouriers(couriers) {
+            document.getElementById('courier-count').innerText = `(${couriers.length})`;
+            const tbody = document.querySelector('#couriers-table tbody');
+            tbody.innerHTML = couriers.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.daily_capacity}</td>
+                    <td>${c.current_assigned_count} / ${c.daily_capacity}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="3">No couriers available</td></tr>';
+        }
+
+        // Initial load
+        fetchData();
+    </script>
+</body>
+</html>
