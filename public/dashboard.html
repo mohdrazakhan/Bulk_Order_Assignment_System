@@ -1,145 +1,363 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Order Assignment Dashboard</title>
+    <!-- Use Tailwind for nicer UI? No, stick to raw CSS as per original style but upgraded -->
     <style>
         :root {
-            --primary-color: #2563eb;
-            --secondary-color: #64748b;
-            --success-color: #22c55e;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
         }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
-            color: #1e293b;
+            padding: 2rem;
+            line-height: 1.5;
         }
+
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
+
+        /* Header */
         header {
-            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        h1 { margin: 0; font-size: 1.5rem; }
-        
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .controls {
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .badge {
+            background: #e2e8f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             display: flex;
-            gap: 1rem;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            color: var(--text);
+        }
+
+        .stat-card.blue {
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .stat-card.green {
+            border-bottom: 4px solid var(--success);
+        }
+
+        /* Controls */
+        .controls-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1.5rem;
             align-items: center;
             flex-wrap: wrap;
         }
-        select, button {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.9rem;
-        }
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: #1d4ed8; }
-        button.secondary { background-color: var(--secondary-color); }
-        button.success { background-color: var(--success-color); }
 
-        .grid {
+        select {
+            padding: 0.6rem 2rem 0.6rem 1rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .btn {
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            filter: brightness(90%);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: var(--text);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Main Grid */
+        .data-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            gap: 2rem;
+            align-items: start;
         }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
 
-        .list-container {
-            max-height: 400px;
+        @media (max-width: 900px) {
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .panel-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .panel h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .count-badge {
+            background: #cbd5e1;
+            padding: 0.1rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .table-container {
+            flex: 1;
             overflow-y: auto;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.875rem;
         }
-        th, td {
-            text-align: left;
-            padding: 0.75rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        th { background-color: #f8fafc; font-weight: 600; }
-        
-        .status-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        .status-badge.new { background-color: #dbeafe; color: #1e40af; }
-        .status-badge.unassigned { background-color: #fee2e2; color: #991b1b; }
 
-        #log-area {
-            background: #1e293b;
-            color: #e2e8f0;
-            font-family: monospace;
+        th {
+            text-align: left;
             padding: 1rem;
+            background: #fdfdfd;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Progress Bar */
+        .progress-w {
+            width: 100%;
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar.full {
+            background: var(--danger);
+        }
+
+        .progress-bar.med {
+            background: var(--success);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1e293b;
+            color: white;
+            padding: 1rem 2rem;
             border-radius: 8px;
-            height: 150px;
-            overflow-y: auto;
-            margin-top: 1rem;
-            font-size: 0.85rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        /* Loader */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-            <h1>📦 Order Assignment System</h1>
-            <div id="status">System Ready</div>
+            <div>
+                <h1>📦 Order Dispatch Command</h1>
+            </div>
+            <span class="badge" id="system-status">● System Active</span>
         </header>
 
-        <div class="card">
-            <div class="controls">
-                <label for="location">Location:</label>
-                <select id="location">
-                    <option value="Zone A">Zone A</option>
-                    <option value="Zone B">Zone B</option>
-                    <option value="Zone C">Zone C</option>
-                </select>
-                <button onclick="fetchData()">🔄 Fetch Data</button>
-                <button class="success" onclick="runAssignment()">🚀 Run Bulk Assignment</button>
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <span class="stat-label">Pending Orders (Selected Zone)</span>
+                <span class="stat-value" id="stat-orders">--</span>
+            </div>
+            <div class="stat-card green">
+                <span class="stat-label">Active Couriers (Selected Zone)</span>
+                <span class="stat-value" id="stat-couriers">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Assigned (Last Run)</span>
+                <span class="stat-value" id="stat-assigned">0</span>
             </div>
         </div>
 
-        <div class="card" id="log-container" style="display:none;">
-            <h3>Activity Log</h3>
-            <div id="log-area"></div>
+        <div class="controls-card">
+            <div style="flex:1;">
+                <label style="font-weight:600; margin-right:1rem; font-size:0.9rem;">Select Zone:</label>
+                <select id="location" onchange="fetchData()">
+                    <option value="Zone A">Zone A (City Center)</option>
+                    <option value="Zone B">Zone B (Suburbs)</option>
+                    <option value="Zone C">Zone C (Industrial)</option>
+                </select>
+            </div>
+
+            <button class="btn btn-outline" onclick="fetchData()" id="btn-refresh">
+                <span class="spinner"></span> 🔄 Refresh
+            </button>
+            <button class="btn btn-danger" onclick="resetSystem()" id="btn-reset">
+                <span class="spinner"></span> ⚠️ Reset & Seed
+            </button>
+            <button class="btn btn-primary" onclick="runAssignment()" id="btn-run">
+                <span class="spinner"></span> 🚀 Run Auto-Assign
+            </button>
         </div>
 
-        <div class="grid">
-            <div class="card">
-                <h3>Unassigned Orders <span id="order-count">(0)</span></h3>
-                <div class="list-container">
+        <div class="data-grid">
+            <!-- Orders Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Unassigned Orders</h2>
+                    <span class="count-badge" id="orders-badge">0</span>
+                </div>
+                <div class="table-container">
                     <table id="orders-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Order ID</th>
                                 <th>Value</th>
                                 <th>Date</th>
                             </tr>
@@ -149,15 +367,18 @@
                 </div>
             </div>
 
-            <div class="card">
-                <h3>Available Couriers <span id="courier-count">(0)</span></h3>
-                <div class="list-container">
+            <!-- Couriers Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Available Couriers</h2>
+                    <span class="count-badge" id="couriers-badge">0</span>
+                </div>
+                <div class="table-container">
                     <table id="couriers-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Capacity</th>
-                                <th>Assigned</th>
+                                <th>Courier Name</th>
+                                <th>Load Capacity</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -167,78 +388,139 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Action Completed</div>
+
     <script>
-        const log = (msg) => {
-            const area = document.getElementById('log-area');
-            document.getElementById('log-container').style.display = 'block';
-            area.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-            area.scrollTop = area.scrollHeight;
+        // State
+        const state = {
+            orders: [],
+            couriers: [],
+            location: 'Zone A'
         };
 
+        const ui = {
+            toast: document.getElementById('toast'),
+            ordersTable: document.querySelector('#orders-table tbody'),
+            couriersTable: document.querySelector('#couriers-table tbody'),
+            statOrders: document.getElementById('stat-orders'),
+            statCouriers: document.getElementById('stat-couriers'),
+            statAssigned: document.getElementById('stat-assigned'),
+            badges: {
+                orders: document.getElementById('orders-badge'),
+                couriers: document.getElementById('couriers-badge')
+            }
+        };
+
+        function showToast(msg) {
+            ui.toast.textContent = msg;
+            ui.toast.classList.add('show');
+            setTimeout(() => ui.toast.classList.remove('show'), 3000);
+        }
+
+        function setLoading(btnId, isLoading) {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
         async function fetchData() {
-            const loc = document.getElementById('location').value;
-            log(`Fetching data for ${loc}...`);
-            
+            setLoading('btn-refresh', true);
+            state.location = document.getElementById('location').value;
+
             try {
-                // Fetch Orders
-                const ordersRes = await fetch(`/orders/unassigned?location=${encodeURIComponent(loc)}`);
-                const orders = await ordersRes.json();
-                renderOrders(orders);
+                const [ordersRes, couriersRes] = await Promise.all([
+                    fetch(`/orders/unassigned?location=${encodeURIComponent(state.location)}`),
+                    fetch(`/couriers/available?location=${encodeURIComponent(state.location)}`)
+                ]);
 
-                // Fetch Couriers
-                const couriersRes = await fetch(`/couriers/available?location=${encodeURIComponent(loc)}`);
-                const couriers = await couriersRes.json();
-                renderCouriers(couriers);
+                state.orders = await ordersRes.json();
+                state.couriers = await couriersRes.json();
 
-                log('Data updated.');
+                render();
             } catch (e) {
-                log(`Error: ${e.message}`);
+                showToast("Error fetching data: " + e.message);
+            } finally {
+                setLoading('btn-refresh', false);
             }
         }
 
         async function runAssignment() {
-            log('Starting bulk assignment...');
+            setLoading('btn-run', true);
             try {
                 const res = await fetch('/assignments/bulk', { method: 'POST' });
                 const data = await res.json();
-                log(`Result: ${data.message}`);
-                if(data.details) {
-                    log(`assigned: ${data.details.total_assigned}`);
-                    data.details.errors.forEach(err => log(`ERR: ${err}`));
-                }
-                // Refresh data
-                setTimeout(fetchData, 1000);
+                ui.statAssigned.textContent = data.details ? data.details.total_assigned : 0;
+                showToast(`Assigned ${data.details.total_assigned} orders!`);
+                await fetchData(); // Refresh
             } catch (e) {
-                log(`Assignment Failed: ${e.message}`);
+                showToast("Assignment Failed");
+            } finally {
+                setLoading('btn-run', false);
             }
         }
 
-        function renderOrders(orders) {
-            document.getElementById('order-count').innerText = `(${orders.length})`;
-            const tbody = document.querySelector('#orders-table tbody');
-            tbody.innerHTML = orders.map(o => `
-                <tr>
-                    <td>#${o.order_id}</td>
-                    <td>$${o.order_value}</td>
-                    <td>${o.order_date.split(' ')[1]}</td>
-                </tr>
-            `).join('') || '<tr><td colspan="3">No unassigned orders</td></tr>';
+        async function resetSystem() {
+            if (!confirm("Are you sure? This will delete all current assignments and orders and re-seed the database.")) return;
+
+            setLoading('btn-reset', true);
+            try {
+                const res = await fetch('/system/reset', { method: 'POST' });
+                await res.json();
+                ui.statAssigned.textContent = "0";
+                showToast("System Reset Complete!");
+                await fetchData();
+            } catch (e) {
+                showToast("Reset Failed");
+            } finally {
+                setLoading('btn-reset', false);
+            }
         }
 
-        function renderCouriers(couriers) {
-            document.getElementById('courier-count').innerText = `(${couriers.length})`;
-            const tbody = document.querySelector('#couriers-table tbody');
-            tbody.innerHTML = couriers.map(c => `
+        function render() {
+            // Stats
+            ui.statOrders.textContent = state.orders.length;
+            ui.statCouriers.textContent = state.couriers.length;
+            ui.badges.orders.textContent = state.orders.length;
+            ui.badges.couriers.textContent = state.couriers.length;
+
+            // Orders Table
+            ui.ordersTable.innerHTML = state.orders.map(o => `
                 <tr>
-                    <td>${c.name}</td>
-                    <td>${c.daily_capacity}</td>
-                    <td>${c.current_assigned_count} / ${c.daily_capacity}</td>
+                    <td style="font-weight:600">#${o.order_id}</td>
+                    <td>$${parseFloat(o.order_value).toLocaleString()}</td>
+                    <td style="color:#64748b; font-size:0.85rem">${o.order_date.split(' ')[1]}</td>
                 </tr>
-            `).join('') || '<tr><td colspan="3">No couriers available</td></tr>';
+            `).join('') || `<tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:2rem;">No pending orders in this zone</td></tr>`;
+
+            // Couriers Table
+            ui.couriersTable.innerHTML = state.couriers.map(c => {
+                const pct = (c.current_assigned_count / c.daily_capacity) * 100;
+                let colorClass = pct > 80 ? 'full' : (pct > 50 ? 'med' : '');
+                return `
+                <tr>
+                    <td style="font-weight:600">${c.name}</td>
+                    <td>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                            <span>${c.current_assigned_count} / ${c.daily_capacity}</span>
+                            <span>${Math.round(pct)}%</span>
+                        </div>
+                        <div class="progress-w">
+                            <div class="progress-bar ${colorClass}" style="width: ${pct}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('') || `<tr><td colspan="2" style="text-align:center; color:#94a3b8; padding:2rem;">No couriers available</td></tr>`;
         }
 
-        // Initial load
+        // Init
         fetchData();
     </script>
 </body>
+
 </html>

@@ -15,7 +15,8 @@ The database is designed for data integrity and high-performance querying of una
     *   `order_id` (PK), `delivery_location`, `status`, `order_date`.
     *   *Index*: `(status, delivery_location, order_date)` covers the most frequent query: "Get unassigned orders in Zone X sorted by date".
 *   **assignments**: Logs successful assignments.
-    *   `assignment_id` (PK), `order_id` (Unique FK), `courier_id` (FK).
+    *   `assignment_id` (PK), `order_id` (Unique FK).
+    *   `courier_id` (FK): Maps to `agent_id` from requirements.
 
 ### Optimization Strategies
 *   **Composite Indexes**: The `orders` table index allows the database to filter by `status`, drill down to `delivery_location`, and sort by `order_date` without a separate sort step (filesort).
@@ -59,7 +60,14 @@ The database is designed for data integrity and high-performance querying of una
     *   (Placeholder) View recent assignment logs.
 
 ---
+## 6. Error & Retry Logic
+*   **Retry Mechanism**:
+    *   **Transient Failures**: If a database lock timeout occurs, the script can simply be re-run. Since operations are idempotent (only unassigned orders are picked), re-running is safe.
+    *   **Logic Errors**: Logged to `assignments.status` or a separate error log.
+*   **Monitoring**: Use the dashboard or query the `assignments` table for status != 'SUCCESS'.
+*   **Real-time Improvements**: Use a message queue (RabbitMQ/Redis) to decouple order ingestion from assignment.
 
+## 7. Deliverables Checklist
 ## 4. Edge Cases & Error Handling
 
 *   **No Available Couriers**: The system logs the error for that batch and moves on. The orders remain 'UNASSIGNED' and will be picked up in the next run.

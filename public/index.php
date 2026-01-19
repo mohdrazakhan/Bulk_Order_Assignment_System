@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../src/OrderService.php';
 require_once __DIR__ . '/../src/CourierService.php';
 require_once __DIR__ . '/../src/AssignmentService.php';
+require_once __DIR__ . '/../src/SeedService.php';
 
 // Simple Router
 $requestMethod = $_SERVER['REQUEST_METHOD'];
@@ -48,6 +49,11 @@ try {
         $service = new AssignmentService();
         $result = $service->runBulkAssignment();
         jsonResponse(['message' => 'Bulk assignment completed', 'details' => $result]);
+
+    } elseif ($requestUri === '/system/reset' && $requestMethod === 'POST') {
+        $service = new SeedService();
+        $result = $service->resetDatabase();
+        jsonResponse($result);
 
     } elseif ($requestUri === '/assignments/results' && $requestMethod === 'GET') {
         // Implement fetching results if needed, or just rely on database check
