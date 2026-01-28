@@ -1,59 +1,83 @@
-# 📦 Bulk Order Assignment System
+# Bulk Order Assignment System
 
-A high-performance backend service designed to efficiently assign thousands of orders to couriers in bulk. Built with **PHP** and **MySQL**, featuring race-condition handling, REST APIs, and a real-time dashboard.
+A full-stack web application designed to automate the assignment of delivery orders to couriers based on location compatibility and daily capacity constraints. This project demonstrates core backend logic, database management, and a clean frontend interface.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Dashboard+Preview) *(Replace with actual screenshot)*
+🚀 Features
 
-## 🚀 Key Features
-*   **Bulk Assignment Algorithm**: Optimizes order distribution based on courier capacity and location.
-*   **Concurrency Safe**: Uses atomic database updates to prevent race conditions during parallel execution.
-*   **RESTful API**: Clean endpoints for managing orders, couriers, and assignments.
-*   **Interactive Dashboard**: A simple frontend (HTML/JS) to visualize data and trigger assignments.
-*   **Scalable Schema**: Optimized MySQL indexes for fast retrieval of unassigned orders.
+*   Automated Assignment Algorithm: Greedily matches orders to couriers based on:
+    *   Location: Courier must serve the order's delivery location.
+    *   Capacity: Courier must have remaining daily capacity.
+*   Real-time Dashboard: View Unassigned Orders, Available Couriers, and Current Assignments.
+*   System Reset: One-click reset to clear all assignments and restore original states.
+*   Activity Logging: Tracks system actions (Assignments, Resets) for auditing.
+*   Database Transactions: Ensures data integrity during bulk updates.
 
-## 🛠️ Tech Stack
-*   **Backend**: PHP 8.x (Vanilla, No Framework)
-*   **Database**: MySQL 8.0+
-*   **Frontend**: HTML5, CSS3, JavaScript (Fetch API)
+🛠️ Tech Stack
 
-## 📋 System Design
-For a deep dive into the database schema and assignment logic, check out the [Design Document](DESIGN_DOCUMENT.md).
+*   Frontend: HTML5, CSS3, JavaScript (Vanilla ES6+), Fetch API.
+*   Backend: PHP (OOP & Procedural), RESTful API architecture.
+*   Database: MySQL (Relational Data Model).
+*   Environment: MAMP/XAMPP (Apache/Nginx Server).
 
-## Setup
+📂 Project Structure
 
-## Setup
+```
+Losung360p/
+├── api/                    # Backend API Endpoints
+│   ├── bulkAssignOrders.php    # Core Assignment Logic
+│   ├── getUnassignedOrders.php # Fetch Orders
+│   ├── getAvailableCouriers.php# Fetch Couriers
+│   ├── resetAssignments.php    # Reset System
+│   └── getLogs.php             # System Logs
+├── config/
+│   └── db.php              # Database Connection Class
+├── models/
+│   ├── Assignment.php      # Assignment Model
+│   ├── Courier.php         # Courier Model
+│   └── Order.php           # Order Model
+├── logs/                   # System Log Files
+│   └── system.log
+└── index.php               # Main Dashboard Interface
+```
 
-1.  **Database Setup**:
-    *   Ensure MySQL is running.
-    *   Create a database named `losung360`.
-    *   **Note**: The default Homebrew MySQL installation has **no password** for the `root` user. Just press Enter if prompted.
-    *   Import the schema:
-        ```bash
-        mysql -u root -p losung360 < sql/schema.sql
-        ```
-    *   (Optional) Configure credentials in `src/Database.php`.
+⚙️ Setup & Installation
 
-2.  **Seed Data**:
-    *   Populate the database with test data:
-        ```bash
-        php scripts/seed.php
-        ```
-
-3.  **Run API**:
-    *   You can use the built-in PHP server for testing:
-        ```bash
-        php -S localhost:8000 -t public
-        ```
-
-## API Usage
-
-*   **Assign Orders**:
+1.  Clone the Repository:
     ```bash
-    curl -X POST http://localhost:8000/assignments/bulk
+    git clone 
     ```
 
-*   **View Unassigned Orders**:
-    ```bash
-    curl "http://localhost:8000/orders/unassigned?location=Zone%20A"
-    ```
-# Bulk_Order_Assignment_System
+2.  Configure Database:
+    *   Create a MySQL database named `bulk_order_system`.
+    *   Import the provided SQL schema (not included in repo, assuming standard structure):
+        *   `orders` (order_id, delivery_location, order_value, status)
+        *   `couriers` (id, name, serviceable_locations, daily_capacity, current_assigned_count)
+        *   `order_assignments` (assignment_id, order_id, agent_id, assignment_date)
+    *   Update `config/db.php` with your database credentials.
+
+3.  Run the Application:
+    *   Place the project folder in your local server directory (e.g., `htdocs` for MAMP/XAMPP).
+    *   Start Apache and MySQL.
+    *   Open your browser and navigate to: `http://localhost:8888/Losung360p/`
+
+🔌 API Reference
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/getUnassignedOrders.php` | Fetches all pending orders. |
+| `GET` | `/api/getAvailableCouriers.php` | Fetches couriers and their capacity. |
+| `POST` | `/api/bulkAssignOrders.php` | Triggers the assignment algorithm. |
+| `POST` | `/api/resetAssignments.php` | Resets all data to initial state. |
+
+🧠 Core Logic (The Algorithm)
+
+The assignment logic follows a Greedy Approach:
+1.  Iterates through all `UNASSIGNED` orders.
+2.  For each order, checks the list of `active` couriers.
+3.  Assigns the order to the first available courier who:
+    *   Services the order's location.
+    *   Has `current_assigned_count < daily_capacity`.
+4.  Updates the database transactions safely to prevent race conditions.
+
+---
+Author: Mohd Raza Khan
