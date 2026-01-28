@@ -2,7 +2,6 @@
 
 A high-performance backend service designed to efficiently assign thousands of orders to couriers in bulk. Built with **PHP** and **MySQL**, featuring race-condition handling, REST APIs, and a real-time dashboard.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=Dashboard+Preview) *(Replace with actual screenshot)*
 
 ## 🚀 Key Features
 *   **Bulk Assignment Algorithm**: Optimizes order distribution based on courier capacity and location.
